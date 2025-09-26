@@ -1,0 +1,17 @@
+{
+  "name": "meme-gallery-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "keywords": [],
+  "author": "",
+  "description": ""
+}
