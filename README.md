@@ -139,12 +139,15 @@ curl -i -X POST http://localhost:3000/memes \
   ```
 ## Screenshots / Postman
 `docs/screenshots/GET.png`
+![GET](docs/screenshots/GET.png)
 
 
 `docs/screenshots/POST.png`
+![POST](docs/screenshots/POST.png)
 
 
 `docs/screenshots/LocalHost.png`
+![localHost](docs/screenshots/LocalHost.png)
 
 ## Notes
 - Data is in-memory. Restarting the server resets the list.
