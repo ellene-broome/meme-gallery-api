@@ -12,7 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# OS junk
+# OS junk files 
 .DS_Store      # macOS
 Thumbs.db      # Windows
 
