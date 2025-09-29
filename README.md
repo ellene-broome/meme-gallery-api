@@ -2,6 +2,11 @@
 
 A  **Node + Express** API that serves and creates memes. Uses ES Modules and in-memory data (no database yet).
 
+## Features
+- Day 1: `GET /memes`, `POST /memes` with basic validation and JSON error handling
+- Day 2: `GET /memes/:id` (fetch a single meme by id)
+- Friendly root (`/`), JSON 404, and “Malformed JSON” handler
+
 ## Requirements
 - Node.js 18+ (check with `node -v`)
 - Postman for testing
@@ -19,6 +24,17 @@ This project supports a .env file (ignored by git). Example:
 - #### .env.example  `PORT=3000`
 
 - `.env.local`, (when we get to AWS) 
+
+## Seeding (WHY _/memes/1_ works)
+On server start, teh app seeds 2 items in memory so Day-2 tests work immediately:
+```json
+[
+  { "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" },
+  { "id": 2, "title": "Success Kid", "url": "https://i.imgur.com/example2.jpg" }
+]
+```
+Because data is in memory, restarting the server resets the list. 
+(In my capstone I used this method to start my project without having to deal with AWS login 😏)
 
 ## Tech
 - Node.js, Express
@@ -53,53 +69,42 @@ node_modules/
 .DS_Store
 Thumbs.db
 ```
-## Endpoints
-GET `/memes`
+## API Summary
+| Method | Route        | Purpose                   | Success | Error(s)                                     |
+| -----: | ------------ | ------------------------- | :-----: | -------------------------------------------- |
+|    GET | `/memes`     | List all memes            |   200   | —                                            |
+|    GET | `/memes/:id` | Get a single meme by id   |   200   | 404 `{"error":"Meme not found"}`             |
+|   POST | `/memes`     | Create a meme (JSON body) |   201   | 400 missing/blank fields; 400 malformed JSON |
 
-Returns all memes.
+## Request/Response examples
 
-#### 200 OK
-
+**GET** `_/memes_`
 ```json
 [
   { "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" },
   { "id": 2, "title": "Success Kid", "url": "https://i.imgur.com/example2.jpg" }
 ]
 ```
-GET `/memes/:id`
-Returns a single meme by id.
 
-#### 200 OK
-```json
-{ "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" }
-```
-**404 Not Found**
+**GET `_/memes/:id_` **404**
 ```json
 { "error": "Meme not found" }
 ```
-**POST `/memes`**
-Create a meme. Body must be JSON.
-
-### Request
+**POST** `_/memes_` (request)
 ```json
 { "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
 ```
-### 201 Created
+**201 Created**
 ```json
 { "id": 3, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
 ```
-### Validation & Errors
-- Missing/blank title or url → 400
+**404 Missing/blank**
 ```json
 { "error": "Title and URL are required." }
 ```
-- Malformed JSON → 400
+**400 Malformed JSON**
 ```json
 { "error": "Malformed JSON" }
-```
-- Unknown route → 404
-```json
-{ "error": "Not found" }
 ```
 ## How to Test
   ### Postman
@@ -138,16 +143,22 @@ curl -i -X POST http://localhost:3000/memes \
   -d '{"title":"Bad","url":"https://i.imgur.com/x.jpg",}'
   ```
 ## Screenshots / Postman
-`docs/screenshots/GET.png`
+**DAY 1**
+- `docs/screenshots/GET.png`
 ![GET](docs/screenshots/GET.png)
 
 
-`docs/screenshots/POST.png`
+- `docs/screenshots/POST.png`
 ![POST](docs/screenshots/POST.png)
 
 
-`docs/screenshots/LocalHost.png`
+- `docs/screenshots/LocalHost.png`
 ![localHost](docs/screenshots/LocalHost.png)
+**DAY 2**
+- `GET-id-200.png` – `GET /memes/1` (200 OK)
+- ![memes/OK](docs/screenshots/Day2-memesOK.png)
+- `GET-id-404.png` – `GET /memes/9999` (404 Not Found)
+![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
 
 ## Notes
 - Data is in-memory. Restarting the server resets the list.
