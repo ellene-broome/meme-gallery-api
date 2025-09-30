@@ -57,8 +57,8 @@ meme-gallery-api/
         ├─ GET.png
         ├─ POST.png
         ├─ LocalHost.png
-        ├─ Day3-logger.png        ← new
-        └─ Day3-Day3-500errorTest.png     ← new
+        ├─ Day3-logger.png    
+        └─ Day3-Day3-500errorTest.png  
 
 ```
 .gitignore
