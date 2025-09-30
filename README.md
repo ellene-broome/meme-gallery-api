@@ -57,8 +57,10 @@ meme-gallery-api/
         ├─ GET.png
         ├─ POST.png
         ├─ LocalHost.png
-        ├─ Day3-logger.png    
-        └─ Day3-Day3-500errorTest.png  
+        ├─ Day3-logger.png  
+        ├─ Day3-Day3-500errorTest.png
+        ├─ PUT-Day4.png
+        └─ DELETE-Day4.png
 
 ```
 .gitignore
@@ -109,6 +111,29 @@ Thumbs.db
 ```json
 { "error": "Malformed JSON" }
 ```
+**PUT** 
+- Request
+```json
+{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+```
+- 200 OK
+```json
+{ "id": 1, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+```
+- 404 Bad Request (if the field is blank)
+```json
+{ "error": "Title cannot be empty." }
+```
+- 404 Not Found
+```json
+{ "error": "Meme not found" }
+```
+**DELETE**
+Delete a meme by id.
+- 200 OK
+```json
+{ "id": 1, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+```
 ## How to Test
   ### Postman
 1. `GET http://localhost:3000/memes` → expect 200 + list
@@ -144,6 +169,15 @@ curl -i -X POST http://localhost:3000/memes \
 curl -i -X POST http://localhost:3000/memes \
   -H "Content-Type: application/json" \
   -d '{"title":"Bad","url":"https://i.imgur.com/x.jpg",}'
+
+# PUT `http://localhost:3000/memes/1`
+Body → raw → JSON
+{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+
+Expect **200 OK** with updated object.
+
+# DELETE `http://localhost:3000/memes/1
+Expect **200 OK** with deleted object.
   ```
 ## Screenshots / Postman
 **DAY 1**
@@ -167,6 +201,11 @@ curl -i -X POST http://localhost:3000/memes \
 ![logger](docs/screenshots/Day3-logger.png)
 - 500 error Proof
   ![500-error"Something went Wrong!"](docs/screenshots/Day3-500errorTest.png)
+**Day 4**
+- `PUT-Day4.png` – Postman showing 200 OK from `PUT /memes/:id`
+![PUT](docs/screenshots/PUT-Day4(2).png)
+- `Day4-delete.png` – Postman showing 200 OK from `DELETE /memes/:id`
+![DELETE](docs/screenshots/DELETE-Day4.png)
 
 ## Notes
 - Data is in-memory. Restarting the server resets the list.
@@ -175,8 +214,6 @@ curl -i -X POST http://localhost:3000/memes \
 
 ## Next Steps (Stretch)
 - Stronger URL validation
-
-- PUT/PATCH/DELETE routes
 
 - Connect to a real database (MongoDB/SQLite/Postgres)
 
