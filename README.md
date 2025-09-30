@@ -56,7 +56,10 @@ meme-gallery-api/
      └─ screenshots/
         ├─ GET.png
         ├─ POST.png
-        └─ LocalHost.png
+        ├─ LocalHost.png
+        ├─ Day3-logger.png        ← new
+        └─ Day3-Day3-500errorTest.png     ← new
+
 ```
 .gitignore
 This repo ignores:
@@ -159,6 +162,11 @@ curl -i -X POST http://localhost:3000/memes \
 - ![memes/OK](docs/screenshots/Day2-memesOK.png)
 - `GET-id-404.png` – `GET /memes/9999` (404 Not Found)
 ![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
+**Day 3**
+- Logger Proof
+![logger](docs/screenshots/Day3-logger.png)
+- 500 error Proof
+  ![500-error"Something went Wrong!"](docs/screenshots/Day3-500errorTest.png)
 
 ## Notes
 - Data is in-memory. Restarting the server resets the list.
