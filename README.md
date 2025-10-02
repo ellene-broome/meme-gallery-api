@@ -9,6 +9,7 @@ A  **Node + Express** API that serves and creates memes. Uses ES Modules and in-
 
 ## Requirements
 - Node.js 18+ (check with `node -v`)
+- npm
 - Postman for testing
 
 ## Quick Start
@@ -60,7 +61,8 @@ meme-gallery-api/
         ├─ Day3-logger.png  
         ├─ Day3-Day3-500errorTest.png
         ├─ PUT-Day4.png
-        └─ DELETE-Day4.png
+        ├─ DELETE-Day4.png
+        └─ GET-Day5.png
 
 ```
 .gitignore
@@ -206,11 +208,24 @@ Expect **200 OK** with deleted object.
 ![PUT](docs/screenshots/PUT-Day4(2).png)
 - `Day4-delete.png` – Postman showing 200 OK from `DELETE /memes/:id`
 ![DELETE](docs/screenshots/DELETE-Day4.png)
+**Day 5**
+- mvc-structure addded controllers/ and routes/ folders
+![Day5](docs/screenshots/GET-Day5.png)
 
-## Notes
-- Data is in-memory. Restarting the server resets the list.
+## What’s inside
 
-- `package.json` includes `"type": "module"` so we can use `import`.
+ESM ("type": "module" in package.json)
+
+- Logging middleware: logs METHOD URL -> STATUS (ms) for every request
+
+- Centralized error handler:
+
+  - bad JSON → 400 { "error": "Malformed JSON" }
+  - unexpected errors → 500 { "error": "Something went wrong!" }
+
+- 404 JSON for unknown routes
+
+- MVC refactor (Day 5): routes ↔ controllers separation to prep for a DB later
 
 ## Next Steps (Stretch)
 - Stronger URL validation
@@ -225,3 +240,14 @@ Expect **200 OK** with deleted object.
 npm i -D nodemon
 npm run dev
 ```
+# Changelog
+
+- Day 1: Basic Express server; GET /memes, POST /memes.
+
+- Day 2: GET /memes/:id with 404s.
+
+- Day 3: Request logging + centralized error handling.
+
+- Day 4: PUT /memes/:id and DELETE /memes/:id.
+
+- Day 5: MVC refactor (routes + controllers).
