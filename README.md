@@ -1,30 +1,36 @@
 # Meme Gallery API
 
-A  **Node + Express** API that serves and creates memes. Uses ES Modules and in-memory data (no database yet).
+A **Node + Express** API that serves and creates memes. Uses ES Modules and (for now) in-memory data. Day 1 of the DB module adds an **AWS RDS PostgreSQL** instance with tables + sample CRUD tested via `psql`.
 
 ## Features
-- Day 1: `GET /memes`, `POST /memes` with basic validation and JSON error handling
+- Day 1 (API): `GET /memes`, `POST /memes` (validation + JSON error handling)
 - Day 2: `GET /memes/:id` (fetch a single meme by id)
-- Friendly root (`/`), JSON 404, and “Malformed JSON” handler
+- Day 3: Request logger + centralized error handler (malformed JSON/500s)
+- Day 4: `PUT /memes/:id`, `DELETE /memes/:id`
+- Day 5: **MVC refactor** (`routes/`, `controllers/`)
+- DB Module Day 1 (RDS): Created PostgreSQL on AWS RDS, ran `db/schema.sql` + `db/crud.sql` via `psql`, and captured screenshots (endpoint, SG inbound rule, queries).
 
 ## Requirements
-- Node.js 18+ (check with `node -v`)
+- Node.js 18+ (`node -v`)
 - npm
-- Postman for testing
+- Postman (or curl) for testing
+- **PostgreSQL client (`psql`)** installed locally (used to talk to AWS RDS)
 
 ## Quick Start
 ```bash
 npm install
 npm start
-```
+# (optional) with nodemon if you added it:
+# npm run dev
+
 Server runs at: http://localhost:3000
 
 ## Environment Variables
-This project supports a .env file (ignored by git). Example:
+This project supports a .env file (ignored by git). 
 
 - #### .env.example  `PORT=3000`
 
-- `.env.local`, (when we get to AWS) 
+- `.env.local` 
 
 ## Seeding (WHY _/memes/1_ works)
 On server start, teh app seeds 2 items in memory so Day-2 tests work immediately:
@@ -39,30 +45,41 @@ Because data is in memory, restarting the server resets the list.
 
 ## Tech
 - Node.js, Express
-
 - ES6+: import, arrow functions, destructuring, async handler
-
 - express.json() for JSON body parsing
+- Middleware logger (METHOD URL → STATUS in ms)
+- Centralized error handler + JSON 404s
+- MVC separation (routes ↔ controllers)
+- AWS RDS PostgreSQL (via psql for this module)
 
 ## Project Structure
 ```
 meme-gallery-api/
   ├─ index.js
-  ├─ package.json
-  ├─ package-lock.json
+  ├─ controllers/
+  │   └─ memeController.js
+  ├─ routes/
+  │   └─ memeRoutes.js
+  ├─ db/
+  │   ├─ schema.sql         # CREATE TABLE users, memes
+  │   └─ crud.sql           # INSERT/SELECT/UPDATE/DELETE samples
+  ├─ docs/
+  │   └─ screenshots/
+  │       ├─ GET.png
+  │       ├─ POST.png
+  │       ├─ LocalHost.png
+  │       ├─ Day3-logger.png
+  │       ├─ Day3-500errorTest.png
+  │       ├─ PUT-Day4.png
+  │       ├─ DELETE-Day4.png
+  │       ├─ GET-Day5.png
+  │       ├─ wk2Day1RDS-Endpoints.png      
+  │       ├─ wk2Day1inBoundRules.png
+  |       └─ wk2Day1psql-SchemaandCRUD.png                          
+  ├─ .env.example
   ├─ .gitignore
-  ├─ README.md
-  ├─ postman_collection.json
-  └─ docs/
-     └─ screenshots/
-        ├─ GET.png
-        ├─ POST.png
-        ├─ LocalHost.png
-        ├─ Day3-logger.png  
-        ├─ Day3-Day3-500errorTest.png
-        ├─ PUT-Day4.png
-        ├─ DELETE-Day4.png
-        └─ GET-Day5.png
+  ├─ package.json
+  └─ README.md
 
 ```
 .gitignore
@@ -82,6 +99,9 @@ Thumbs.db
 |    GET | `/memes`     | List all memes            |   200   | —                                            |
 |    GET | `/memes/:id` | Get a single meme by id   |   200   | 404 `{"error":"Meme not found"}`             |
 |   POST | `/memes`     | Create a meme (JSON body) |   201   | 400 missing/blank fields; 400 malformed JSON |
+|    PUT | `/memes/:id` | Update a meme by id       |   200   | 400 empty field; 404 not found               |
+| DELETE | `/memes/:id` | Delete a meme by id       |   200   | 404 not found                                |
+
 
 ## Request/Response examples
 
@@ -144,11 +164,9 @@ Delete a meme by id.
 
 3. `GET http://localhost:3000/memes/9999` → expect 404 + `{ "error": "Meme not found" }`
 
-4. `POST http://localhost:3000/memes`
-
-- Body → raw → JSON (use the request example above)
-
-- Expect 201 Created + the new object
+4. `POST http://localhost:3000/memes` → (Body → raw → JSON) → Expect 201 Created
+5. `PUT http://localhost:3000/memes/1` → 200 updated object
+6. `DELETE http://localhost:3000/memes/1` → 200 deleted object
 
 ### curl (Git Bash)
 ```bash
@@ -181,6 +199,37 @@ Expect **200 OK** with updated object.
 # DELETE `http://localhost:3000/memes/1
 Expect **200 OK** with deleted object.
   ```
+# AWS RDS (DB Module Day 1)
+
+**What I created**
+
+- RDS PostgreSQL instance in `us-east-2` (Public access: Yes for class)
+
+- Security group allowing inbound **TCP 5432** from my IP
+
+- Database: `meme_gallery`
+
+- Tables: `users`, `memes`
+**Run the SQL files with psql**
+```bash
+# set these for your shell session
+export ENDPOINT="your-endpoint.rds.amazonaws.com"
+export USER="meme_master"
+export DB="meme_gallery"
+export PGPASSWORD="••••••••"   # optional; otherwise psql prompts
+
+# 1) create the database (connect to default 'postgres' db)
+psql "host=$ENDPOINT port=5432 user=$USER dbname=postgres sslmode=require" \
+  -c "CREATE DATABASE $DB;"
+
+# 2) run schema + crud against meme_gallery
+psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
+  -v ON_ERROR_STOP=1 -f db/schema.sql
+
+psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
+  -v ON_ERROR_STOP=1 -f db/crud.sql
+```
+
 ## Screenshots / Postman
 **DAY 1**
 - `docs/screenshots/GET.png`
@@ -211,7 +260,13 @@ Expect **200 OK** with deleted object.
 **Day 5**
 - mvc-structure addded controllers/ and routes/ folders
 ![Day5](docs/screenshots/GET-Day5.png)
-
+**Week 2 Day 1**
+- RDS instance details (Endpoint/port/SG)
+- ![Endpoint](docs/screenshots/wk2Day1RDS-EndPoints.png)
+- Security group inbound rule 5432 from my IP
+![inBoundRules](docs/screenshots/wk2Day1inBoundRules.png)
+- Terminal showing schema+CRUD queries succeeding
+![Schema+CRUD](docs/screenshots/wk2Day1psql-Schema-and-CRUD.png)
 ## What’s inside
 
 ESM ("type": "module" in package.json)
@@ -229,8 +284,6 @@ ESM ("type": "module" in package.json)
 
 ## Next Steps (Stretch)
 - Stronger URL validation
-
-- Connect to a real database (MongoDB/SQLite/Postgres)
 
 - Deploy to Vercel or Render
 
@@ -251,3 +304,5 @@ npm run dev
 - Day 4: PUT /memes/:id and DELETE /memes/:id.
 
 - Day 5: MVC refactor (routes + controllers).
+
+- DB Module Day 1: AWS RDS PostgreSQL set up; schema.sql + crud.sql executed via psql
