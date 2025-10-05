@@ -61,8 +61,8 @@ meme-gallery-api/
   ├─ routes/
   │   └─ memeRoutes.js
   ├─ db/
-  │   ├─ schema.sql         # CREATE TABLE users, memes
-  │   └─ crud.sql           # INSERT/SELECT/UPDATE/DELETE samples
+  │   ├─ schema.sql  
+  │   └─ crud.sql    
   ├─ docs/
   │   └─ screenshots/
   │       ├─ GET.png
