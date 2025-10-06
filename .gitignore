@@ -19,3 +19,5 @@ Thumbs.db      # Windows
 # (for later) build/coverage
 dist/
 coverage/
+
+/generated/prisma

@@ -1,6 +1,7 @@
 # Meme Gallery API
 
-A **Node + Express** API that serves and creates memes. Uses ES Modules and (for now) in-memory data. Day 1 of the DB module adds an **AWS RDS PostgreSQL** instance with tables + sample CRUD tested via `psql`.
+A **Node + Express** API that now uses **Prisma ORM + AWS RDS PostgreSQL** (no more in-memory data). ES Modules, JSON error handling, and MVC layout.
+
 
 ## Features
 - Day 1 (API): `GET /memes`, `POST /memes` (validation + JSON error handling)
@@ -9,31 +10,74 @@ A **Node + Express** API that serves and creates memes. Uses ES Modules and (for
 - Day 4: `PUT /memes/:id`, `DELETE /memes/:id`
 - Day 5: **MVC refactor** (`routes/`, `controllers/`)
 - DB Module Day 1 (RDS): Created PostgreSQL on AWS RDS, ran `db/schema.sql` + `db/crud.sql` via `psql`, and captured screenshots (endpoint, SG inbound rule, queries).
+- Day 3: Switched to Prisma + PostgreSQL (AWS RDS). Models: `User` and `Meme`. CRUD backed by the DB.
+
 
 ## Requirements
-- Node.js 18+ (`node -v`)
+- Node.js 18+ (check with `node -v`)
 - npm
-- Postman (or curl) for testing
-- **PostgreSQL client (`psql`)** installed locally (used to talk to AWS RDS)
+- An AWS RDS PostgreSQL instance (endpoint, username, password)
+- Prisma CLI (installed via devDependency)
+- Postman or curl for testing
+
 
 ## Quick Start
 ```bash
 npm install
-npm start
-# (optional) with nodemon if you added it:
-# npm run dev
+# set DATABASE_URL in .env
+
+# generate client
+npm run prisma:generate
+
+# run first migration (or see baseline note)
+npm run db:migrate
+
+# optional: seed sample data
+npm run db:seed
+
+# start API
+npm run dev
+# Server: http://localhost:3000
+``````
 
 Server runs at: http://localhost:3000
-
-## Environment Variables
-This project supports a .env file (ignored by git). 
-
 - #### .env.example  `PORT=3000`
+DATABASE_URL="postgresql://user:pass@host:5432/meme_gallery?schema=public&sslmode=require"
+- .env.local
+- .env
+DATABASE_URL="postgresql://<username>:<password>@<your-endpoint>:5432/meme_gallery?schema=public&sslmode=require"
+PORT=3000
+## Prisma Models
+`prisma/schema.prisma`
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-- `.env.local` 
+generator client {
+  provider = "prisma-client-js"
+}
 
-## Seeding (WHY _/memes/1_ works)
-On server start, teh app seeds 2 items in memory so Day-2 tests work immediately:
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  password String
+  memes    Meme[]
+
+  @@map("users")
+}
+
+model Meme {
+  id     Int    @id @default(autoincrement())
+  title  String
+  url    String
+  userId Int    @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("memes")
+}
+```
 ```json
 [
   { "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" },
@@ -60,22 +104,21 @@ meme-gallery-api/
   │   └─ memeController.js
   ├─ routes/
   │   └─ memeRoutes.js
-  ├─ db/
-  │   ├─ schema.sql  
-  │   └─ crud.sql    
+  ├─ prisma/
+  │   ├─ schema.prisma
+  │   └─ seed.js
+  ├─ db/                 # used in Week 2 Day 1 (psql)
+  │   ├─ schema.sql
+  │   └─ crud.sql
   ├─ docs/
   │   └─ screenshots/
-  │       ├─ GET.png
-  │       ├─ POST.png
-  │       ├─ LocalHost.png
-  │       ├─ Day3-logger.png
-  │       ├─ Day3-500errorTest.png
-  │       ├─ PUT-Day4.png
-  │       ├─ DELETE-Day4.png
-  │       ├─ GET-Day5.png
-  │       ├─ wk2Day1RDS-Endpoints.png      
+  │       ├─ Day3-prisma-migrate.png
+  │       ├─ Day3-Prisma-Models.png
+  │       ├─ Day3-03-prisma-studio-memes.png
+  │       ├─ Day3-POST-Prisma-201.png
+  │       ├─ wk2Day1RDS-EndPoints.png
   │       ├─ wk2Day1inBoundRules.png
-  |       └─ wk2Day1psql-SchemaandCRUD.png                          
+  │       └─ wk2Day1psql-Schema-and-CRUD.png
   ├─ .env.example
   ├─ .gitignore
   ├─ package.json
@@ -113,7 +156,7 @@ Thumbs.db
 ]
 ```
 
-**GET `_/memes/:id_` **404**
+**GET** `_/memes/:id_` **404**
 ```json
 { "error": "Meme not found" }
 ```
@@ -212,17 +255,13 @@ Expect **200 OK** with deleted object.
 - Tables: `users`, `memes`
 **Run the SQL files with psql**
 ```bash
-# set these for your shell session
 export ENDPOINT="your-endpoint.rds.amazonaws.com"
 export USER="meme_master"
 export DB="meme_gallery"
-export PGPASSWORD="••••••••"   # optional; otherwise psql prompts
-
-# 1) create the database (connect to default 'postgres' db)
+export PGPASSWORD="••••••••"   
 psql "host=$ENDPOINT port=5432 user=$USER dbname=postgres sslmode=require" \
   -c "CREATE DATABASE $DB;"
 
-# 2) run schema + crud against meme_gallery
 psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
   -v ON_ERROR_STOP=1 -f db/schema.sql
 
@@ -231,42 +270,49 @@ psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
 ```
 
 ## Screenshots / Postman
-**DAY 1**
+## **DAY 1**
 - `docs/screenshots/GET.png`
 ![GET](docs/screenshots/GET.png)
-
-
 - `docs/screenshots/POST.png`
 ![POST](docs/screenshots/POST.png)
-
-
 - `docs/screenshots/LocalHost.png`
 ![localHost](docs/screenshots/LocalHost.png)
-**DAY 2**
+## **DAY 2**
 - `GET-id-200.png` – `GET /memes/1` (200 OK)
 - ![memes/OK](docs/screenshots/Day2-memesOK.png)
 - `GET-id-404.png` – `GET /memes/9999` (404 Not Found)
 ![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
-**Day 3**
+## **Day 3**
 - Logger Proof
 ![logger](docs/screenshots/Day3-logger.png)
 - 500 error Proof
   ![500-error"Something went Wrong!"](docs/screenshots/Day3-500errorTest.png)
-**Day 4**
+## **Day 4**
 - `PUT-Day4.png` – Postman showing 200 OK from `PUT /memes/:id`
 ![PUT](docs/screenshots/PUT-Day4(2).png)
 - `Day4-delete.png` – Postman showing 200 OK from `DELETE /memes/:id`
 ![DELETE](docs/screenshots/DELETE-Day4.png)
-**Day 5**
+## **Day 5**
 - mvc-structure addded controllers/ and routes/ folders
 ![Day5](docs/screenshots/GET-Day5.png)
-**Week 2 Day 1**
+## **Week 2 Day 1**
 - RDS instance details (Endpoint/port/SG)
 - ![Endpoint](docs/screenshots/wk2Day1RDS-EndPoints.png)
 - Security group inbound rule 5432 from my IP
 ![inBoundRules](docs/screenshots/wk2Day1inBoundRules.png)
 - Terminal showing schema+CRUD queries succeeding
 ![Schema+CRUD](docs/screenshots/wk2Day1psql-Schema-and-CRUD.png)
+## **Week 2 Prisma + RDS**
+**Prisma migrate / status**
+![migrate](docs/screenshots/Day3-prisma-migrate.png)
+**Prisma models (`schema.prisma`)**
+![models](docs/screenshots/Day3-Prisma-Models.png)
+**Prisma Studio (Meme table)**
+![studio](docs/screenshots/Day3-03-prisma-studio-memes.png)
+**POST 201 proof**
+![postman](docs/screenshots/Day3-POST-Prisma-201.png)
+
+
 ## What’s inside
 
 ESM ("type": "module" in package.json)
@@ -283,11 +329,8 @@ ESM ("type": "module" in package.json)
 - MVC refactor (Day 5): routes ↔ controllers separation to prep for a DB later
 
 ## Next Steps (Stretch)
-- Stronger URL validation
 
 - Deploy to Vercel or Render
-
-- Add nodemon for auto-restart:
 
 ```bash
 npm i -D nodemon
@@ -305,4 +348,6 @@ npm run dev
 
 - Day 5: MVC refactor (routes + controllers).
 
-- DB Module Day 1: AWS RDS PostgreSQL set up; schema.sql + crud.sql executed via psql
+- Week 2 Day 1: AWS RDS PostgreSQL set up; schema.sql + crud.sql executed via psql
+
+- Week 2 Day 3: Prisma + RDS integration; DB-backed CRUD; seed + Studio

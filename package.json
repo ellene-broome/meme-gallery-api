@@ -3,15 +3,27 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
+  "description": "",
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:seed": "node prisma/seed.js",
+    "studio": "prisma studio"
   },
-  "license": "ISC",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
+    "@prisma/client": "^6.16.3",
     "express": "^5.1.0"
   },
-  "keywords": [],
-  "author": "",
-  "description": ""
+  "devDependencies": {
+    "prisma": "^6.16.3",
+    "nodemon": "^3.0.0"
+  },
+  "keywords": []
 }
