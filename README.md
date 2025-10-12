@@ -244,61 +244,61 @@ curl -i -X DELETE http://localhost:3000/memes/1
 ## Screenshots / Postman
 
 ### Day 1
-- `docs/screenshots/GET.png`  
+- ## `docs/screenshots/GET.png`  
   ![GET](docs/screenshots/GET.png)
-- `docs/screenshots/POST.png`  
+- ## `docs/screenshots/POST.png`  
   ![POST](docs/screenshots/POST.png)
-- `docs/screenshots/LocalHost.png`  
+- ## `docs/screenshots/LocalHost.png`  
   ![localHost](docs/screenshots/LocalHost.png)
 
 ### Day 2
-- `docs/screenshots/Day2-memesOK.png` (GET /memes/1 → 200)  
+- ## `docs/screenshots/Day2-memesOK.png` (GET /memes/1 → 200)  
   ![memes/OK](docs/screenshots/Day2-memesOK.png)
-- `docs/screenshots/Day2-memesNotFound.png` (GET /memes/9999 → 404)  
+- ## `docs/screenshots/Day2-memesNotFound.png` (GET /memes/9999 → 404)  
   ![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
 
 ### Day 3
-- `docs/screenshots/Day3-logger.png`  
+- ## `docs/screenshots/Day3-logger.png`  
   ![logger](docs/screenshots/Day3-logger.png)
-- `docs/screenshots/Day3-500errorTest.png`  
+- ## `docs/screenshots/Day3-500errorTest.png`  
   ![500-error](docs/screenshots/Day3-500errorTest.png)
 
 ### Day 4 — Prisma relations (`GET /users/:id/memes`)
-- `docs/screenshots/Day4-users-4-memes-200.png` (GET /users/4/memes → 200)  
-  ![Day4-200](docs/screenshots/Day4-users-4-memes-200.png)
-- `docs/screenshots/Day4-users-99999-memes-404.png` (GET /users/99999/memes → 404)  
+- ## `docs/screenshots/Day4-users-4-memes-200.png` (GET /users/4/memes → 200)  
+  ![Day4-200](docs/screenshots/Day5-GET-memes-by-id.png)
+- ## `docs/screenshots/Day4-users-99999-memes-404.png` (GET /users/99999/memes → 404)  
   ![Day4-404](docs/screenshots/Day4-users-99999-memes-404.png)
 
 ### Day 5 — CRUD with Prisma on RDS
-- `docs/screenshots/Day5-POST-memes-201.png` (POST /memes → 201)  
+- ## `docs/screenshots/Day5-POST-memes-201.png` (POST /memes → 201)  
   ![D5-POST](docs/screenshots/Day5-POST-memes-201.png)
-- `docs/screenshots/Day5-GET-memes-200.png` (GET /memes → 200)  
+- ## `docs/screenshots/Day5-GET-memes-200.png` (GET /memes → 200)  
   ![D5-GET-all](docs/screenshots/Day5-GET-memes-200.png)
-- `docs/screenshots/Day5-GET-memes-id-200.png` (GET /memes/{id} → 200)  
-  ![D5-GET-one](docs/screenshots/Day5-GET-memes-id-200.png)
-- `docs/screenshots/Day5-PUT-memes-id-200.png` (PUT /memes/{id} → 200)  
-  ![D5-PUT](docs/screenshots/Day5-PUT-memes-id-200.png)
-- `docs/screenshots/Day5-DELETE-memes-id-200.png` (DELETE /memes/{id} → 200)  
+- ## `docs/screenshots/Day5-GET-memes-id-200.png` (GET /memes/{id} → 200)  
+  ![D5-GET-one](docs/screenshots/Day5-GET-memes-by-id-200.png)
+- ## `docs/screenshots/Day5-PUT-memes-id-200.png` (PUT /memes/{id} → 200)  
+  ![D5-PUT](docs/screenshots/Day5-PUT-memes-by-id.png)
+- ## `docs/screenshots/Day5-DELETE-memes-id-200.png` (DELETE /memes/{id} → 200)  
   ![D5-DELETE](docs/screenshots/Day5-DELETE-memes-id-200.png)
-- `docs/screenshots/Day5-DELETE-memes-id-404.png` (DELETE same id again → 404)  
+- ## `docs/screenshots/Day5-DELETE-memes-id-404.png` (DELETE same id again → 404)  
   ![D5-ERROR](docs/screenshots/Day5-DELETE-memes-id-404.png)
 
 ### Week 2 Day 1 — RDS setup (historical reference)
-- `docs/screenshots/wk2Day1RDS-EndPoints.png`  
+- ## `docs/screenshots/wk2Day1RDS-EndPoints.png`  
   ![Endpoint](docs/screenshots/wk2Day1RDS-EndPoints.png)
-- `docs/screenshots/wk2Day1inBoundRules.png`  
+- ## `docs/screenshots/wk2Day1inBoundRules.png`  
   ![inBoundRules](docs/screenshots/wk2Day1inBoundRules.png)
-- `docs/screenshots/wk2Day1psql-Schema-and-CRUD.png`  
+- ## `docs/screenshots/wk2Day1psql-Schema-and-CRUD.png`  
   ![Schema+CRUD](docs/screenshots/wk2Day1psql-Schema-and-CRUD.png)
 
 ### Week 2 — Prisma + RDS
-- `docs/screenshots/Day3-prisma-migrate.png`  
+- ## `docs/screenshots/Day3-prisma-migrate.png`  
   ![migrate](docs/screenshots/Day3-prisma-migrate.png)
-- `docs/screenshots/Day3-Prisma-Models.png`  
+- ## `docs/screenshots/Day3-Prisma-Models.png`  
   ![models](docs/screenshots/Day3-Prisma-Models.png)
-- `docs/screenshots/Day3-03-prisma-studio-memes.png`  
+- ## `docs/screenshots/Day3-03-prisma-studio-memes.png`  
   ![studio](docs/screenshots/Day3-03-prisma-studio-memes.png)
-- `docs/screenshots/Day3-POST-Prisma-201.png`  
+- ## `docs/screenshots/Day3-POST-Prisma-201.png`  
   ![postman](docs/screenshots/Day3-POST-Prisma-201.png)
 
 
