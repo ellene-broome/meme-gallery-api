@@ -1,7 +1,6 @@
 # Meme Gallery API
 
-A **Node + Express** API that now uses **Prisma ORM + AWS RDS PostgreSQL** (no more in-memory data). ES Modules, JSON error handling, and MVC layout.
-
+A **Node + Express** API that uses **Prisma ORM + AWS RDS PostgreSQL** (no more in-memory data). ES Modules, JSON error handling, and MVC layout.
 
 ## Features
 - Day 1 (API): `GET /memes`, `POST /memes` (validation + JSON error handling)
@@ -9,27 +8,25 @@ A **Node + Express** API that now uses **Prisma ORM + AWS RDS PostgreSQL** (no m
 - Day 3: Request logger + centralized error handler (malformed JSON/500s)
 - Day 4: `PUT /memes/:id`, `DELETE /memes/:id`
 - Day 5: **MVC refactor** (`routes/`, `controllers/`)
-- DB Module Day 1 (RDS): Created PostgreSQL on AWS RDS, ran `db/schema.sql` + `db/crud.sql` via `psql`, and captured screenshots (endpoint, SG inbound rule, queries).
-- Day 3: Switched to Prisma + PostgreSQL (AWS RDS). Models: `User` and `Meme`. CRUD backed by the DB.
-
+- Week 2 (RDS): Created AWS RDS PostgreSQL and connected via Prisma
+- Users → Memes relation: `GET /users/:id/memes` (Prisma relations)
 
 ## Requirements
 - Node.js 18+ (check with `node -v`)
 - npm
-- An AWS RDS PostgreSQL instance (endpoint, username, password)
-- Prisma CLI (installed via devDependency)
-- Postman or curl for testing
-
+- AWS RDS PostgreSQL instance (endpoint, username, password)
+- Prisma CLI (devDependency)
+- Postman or curl
 
 ## Quick Start
 ```bash
 npm install
 # set DATABASE_URL in .env
 
-# generate client
+# generate prisma client
 npm run prisma:generate
 
-# run first migration (or see baseline note)
+# run first migration (or see note on drift)
 npm run db:migrate
 
 # optional: seed sample data
@@ -38,15 +35,19 @@ npm run db:seed
 # start API
 npm run dev
 # Server: http://localhost:3000
-``````
-
 Server runs at: http://localhost:3000
-- #### .env.example  `PORT=3000`
-DATABASE_URL="postgresql://user:pass@host:5432/meme_gallery?schema=public&sslmode=require"
-- .env.local
-- .env
-DATABASE_URL="postgresql://<username>:<password>@<your-endpoint>:5432/meme_gallery?schema=public&sslmode=require"
+
+## Environment
+
+Create `.env` from `.env.example`:
+
+```ini
 PORT=3000
+DATABASE_URL="postgresql://<username>:<password>@<rds-endpoint>:5432/meme_gallery?schema=public&sslmode=require"
+```
+
+Note (schema drift): If Prisma warns your DB is out of sync with migration history, prefer `npx prisma db push` to sync without data loss. Only use `npx prisma migrate reset` if you are okay losing data.
+
 ## Prisma Models
 `prisma/schema.prisma`
 ```prisma
@@ -75,58 +76,50 @@ model Meme {
   userId Int    @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
+  @@index([userId])
   @@map("memes")
 }
+
 ```
-```json
-[
-  { "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" },
-  { "id": 2, "title": "Success Kid", "url": "https://i.imgur.com/example2.jpg" }
-]
-```
-Because data is in memory, restarting the server resets the list. 
-(In my capstone I used this method to start my project without having to deal with AWS login 😏)
 
 ## Tech
 - Node.js, Express
-- ES6+: import, arrow functions, destructuring, async handler
-- express.json() for JSON body parsing
-- Middleware logger (METHOD URL → STATUS in ms)
-- Centralized error handler + JSON 404s
-- MVC separation (routes ↔ controllers)
-- AWS RDS PostgreSQL (via psql for this module)
 
+- ES modules, async/await
+
+- express.json() for body parsing
+
+- Middleware logger (METHOD URL → STATUS in ms)
+
+- Centralized error handler + JSON 404s
+
+- MVC separation (routes ↔ controllers)
+
+- AWS RDS PostgreSQL via Prisma
+- 
 ## Project Structure
 ```
 meme-gallery-api/
   ├─ index.js
   ├─ controllers/
-  │   └─ memeController.js
+  │   ├─ memeController.js
+  │   └─ userController.js
   ├─ routes/
-  │   └─ memeRoutes.js
+  │   ├─ memeRoutes.js
+  │   └─ users.js
   ├─ prisma/
   │   ├─ schema.prisma
   │   └─ seed.js
-  ├─ db/                 # used in Week 2 Day 1 (psql)
+  ├─ db/                 # Week 2 Day 1 (psql-based)
   │   ├─ schema.sql
   │   └─ crud.sql
-  ├─ docs/
-  │   └─ screenshots/
-  │       ├─ Day3-prisma-migrate.png
-  │       ├─ Day3-Prisma-Models.png
-  │       ├─ Day3-03-prisma-studio-memes.png
-  │       ├─ Day3-POST-Prisma-201.png
-  │       ├─ wk2Day1RDS-EndPoints.png
-  │       ├─ wk2Day1inBoundRules.png
-  │       └─ wk2Day1psql-Schema-and-CRUD.png
+  ├─ docs/screenshots/
   ├─ .env.example
   ├─ .gitignore
   ├─ package.json
   └─ README.md
-
 ```
-.gitignore
-This repo ignores:
+`.gitignore`
 
 ```bash
 node_modules/
@@ -137,68 +130,104 @@ node_modules/
 Thumbs.db
 ```
 ## API Summary
-| Method | Route        | Purpose                   | Success | Error(s)                                     |
-| -----: | ------------ | ------------------------- | :-----: | -------------------------------------------- |
-|    GET | `/memes`     | List all memes            |   200   | —                                            |
-|    GET | `/memes/:id` | Get a single meme by id   |   200   | 404 `{"error":"Meme not found"}`             |
-|   POST | `/memes`     | Create a meme (JSON body) |   201   | 400 missing/blank fields; 400 malformed JSON |
-|    PUT | `/memes/:id` | Update a meme by id       |   200   | 400 empty field; 404 not found               |
-| DELETE | `/memes/:id` | Delete a meme by id       |   200   | 404 not found                                |
+| Method | Route              | Purpose                         | Success | Error(s)                                                                 |
+|------:|--------------------|---------------------------------|:------:|--------------------------------------------------------------------------|
+|   GET | `/memes`           | List all memes                  |  200   | —                                                                        |
+|   GET | `/memes/:id`       | Get a single meme by id         |  200   | 400 invalid id; 404 `{"error":"Meme not found"}`                         |
+|  POST | `/memes`           | Create a meme (JSON body)       |  201   | 400 missing/blank; 400 malformed JSON; 400 invalid `userId` (foreign key)|
+|   PUT | `/memes/:id`       | Update a meme by id             |  200   | 400 empty field/invalid id; 404 not found                                |
+| DELETE| `/memes/:id`       | Delete a meme by id             |  200   | 400 invalid id; 404 not found                                            |
+|   GET | `/users/:id/memes` | List memes for a user |  200 | 400 invalid id; 404 `{"error":"User not found"}`                         |
 
 
-## Request/Response examples
-
-**GET** `_/memes_`
+## Request/Response examples (Postman)
+  
+### GET `/memes` 
 ```json
 [
-  { "id": 1, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg" },
-  { "id": 2, "title": "Success Kid", "url": "https://i.imgur.com/example2.jpg" }
+  {
+    "id": 12,
+    "title": "Distracted Boyfriend",
+    "url": "https://i.imgur.com/example1.jpg",
+    "user": { "id": 4, "username": "alice" }
+  },
+  {
+    "id": 13,
+    "title": "Success Kid",
+    "url": "https://i.imgur.com/example2.jpg",
+    "user": { "id": 4, "username": "alice" }
+  }
 ]
 ```
+### GET `/memes/:id` (404)
+```json
+{ "error": "Meme not found" }
+```
+### POST /`memes`
 
-**GET** `_/memes/:id_` **404**
+### Body
 ```json
-{ "error": "Meme not found" }
+{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg", "userId": 4 }
 ```
-**POST** `_/memes_` (request)
+
+### 201 Created 
 ```json
-{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+{ "id": 17, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg", "userId": 4 }
 ```
-**201 Created**
+
+### 400 Invalid FK
 ```json
-{ "id": 3, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+{ "error": "Invalid userId (foreign key)" }
 ```
-**404 Missing/blank**
+### PUT `/memes/:id`
+
+### Body
 ```json
-{ "error": "Title and URL are required." }
+{ "title": "Updated Meme Title" }
 ```
-**400 Malformed JSON**
+
+### 200 OK
 ```json
-{ "error": "Malformed JSON" }
+{ "id": 17, "title": "Updated Meme Title", "url": "https://i.imgur.com/codingcat.jpg", "userId": 4 }
 ```
-**PUT** 
-- Request
+DELETE /memes/:id
+
+### GET /users/:id/memes
 ```json
-{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+[
+  { "id": 12, "title": "Distracted Boyfriend", "url": "https://i.imgur.com/example1.jpg", "userId": 4 },
+  { "id": 13, "title": "Success Kid", "url": "https://i.imgur.com/example2.jpg", "userId": 4 }
+]
 ```
-- 200 OK
-```json
-{ "id": 1, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+## curl (bash in 2nd terminal)
+
+### GET one (not found)
+```bash
+curl -i http://localhost:3000/memes/9999
 ```
-- 404 Bad Request (if the field is blank)
-```json
-{ "error": "Title cannot be empty." }
+### POST valid
+```bash
+curl -i -X POST http://localhost:3000/memes \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Coding Cat","url":"https://i.imgur.com/codingcat.jpg","userId":4}'
 ```
-- 404 Not Found
-```json
-{ "error": "Meme not found" }
+### POST malformed (trailing comma) -> 400 Malformed JSON
+```bash
+curl -i -X POST http://localhost:3000/memes \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Bad","url":"https://i.imgur.com/x.jpg",}'
 ```
-**DELETE**
-Delete a meme by id.
-- 200 OK
-```json
-{ "id": 1, "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
+### PUT
+```bash
+curl -i -X PUT http://localhost:3000/memes/1 \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Coding Cat","url":"https://i.imgur.com/codingcat.jpg"}'
 ```
+### DELETE
+```bash
+curl -i -X DELETE http://localhost:3000/memes/1
+```-
+
 ## How to Test
   ### Postman
 1. `GET http://localhost:3000/memes` → expect 200 + list
@@ -210,123 +239,87 @@ Delete a meme by id.
 4. `POST http://localhost:3000/memes` → (Body → raw → JSON) → Expect 201 Created
 5. `PUT http://localhost:3000/memes/1` → 200 updated object
 6. `DELETE http://localhost:3000/memes/1` → 200 deleted object
-
-### curl (Git Bash)
-```bash
-# GET all
-curl -i http://localhost:3000/memes
-
-# GET one (success)
-curl -i http://localhost:3000/memes/1
-
-# GET one (not found)
-curl -i http://localhost:3000/memes/9999
-
-# POST valid
-curl -i -X POST http://localhost:3000/memes \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Coding Cat","url":"https://i.imgur.com/codingcat.jpg"}'
-
-
-# POST malformed (trailing comma) -> 400 Malformed JSON
-curl -i -X POST http://localhost:3000/memes \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Bad","url":"https://i.imgur.com/x.jpg",}'
-
-# PUT `http://localhost:3000/memes/1`
-Body → raw → JSON
-{ "title": "Coding Cat", "url": "https://i.imgur.com/codingcat.jpg" }
-
-Expect **200 OK** with updated object.
-
-# DELETE `http://localhost:3000/memes/1
-Expect **200 OK** with deleted object.
-  ```
-# AWS RDS (DB Module Day 1)
-
-**What I created**
-
-- RDS PostgreSQL instance in `us-east-2` (Public access: Yes for class)
-
-- Security group allowing inbound **TCP 5432** from my IP
-
-- Database: `meme_gallery`
-
-- Tables: `users`, `memes`
-**Run the SQL files with psql**
-```bash
-export ENDPOINT="your-endpoint.rds.amazonaws.com"
-export USER="meme_master"
-export DB="meme_gallery"
-export PGPASSWORD="••••••••"   
-psql "host=$ENDPOINT port=5432 user=$USER dbname=postgres sslmode=require" \
-  -c "CREATE DATABASE $DB;"
-
-psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
-  -v ON_ERROR_STOP=1 -f db/schema.sql
-
-psql "host=$ENDPOINT port=5432 user=$USER dbname=$DB sslmode=require" \
-  -v ON_ERROR_STOP=1 -f db/crud.sql
 ```
 
 ## Screenshots / Postman
-## **DAY 1**
-- `docs/screenshots/GET.png`
-![GET](docs/screenshots/GET.png)
-- `docs/screenshots/POST.png`
-![POST](docs/screenshots/POST.png)
-- `docs/screenshots/LocalHost.png`
-![localHost](docs/screenshots/LocalHost.png)
-## **DAY 2**
-- `GET-id-200.png` – `GET /memes/1` (200 OK)
-- ![memes/OK](docs/screenshots/Day2-memesOK.png)
-- `GET-id-404.png` – `GET /memes/9999` (404 Not Found)
-![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
-## **Day 3**
-- Logger Proof
-![logger](docs/screenshots/Day3-logger.png)
-- 500 error Proof
-  ![500-error"Something went Wrong!"](docs/screenshots/Day3-500errorTest.png)
-## **Day 4**
-- `PUT-Day4.png` – Postman showing 200 OK from `PUT /memes/:id`
-![PUT](docs/screenshots/PUT-Day4(2).png)
-- `Day4-delete.png` – Postman showing 200 OK from `DELETE /memes/:id`
-![DELETE](docs/screenshots/DELETE-Day4.png)
-## **Day 5**
-- mvc-structure addded controllers/ and routes/ folders
-![Day5](docs/screenshots/GET-Day5.png)
-## **Week 2 Day 1**
-- RDS instance details (Endpoint/port/SG)
-- ![Endpoint](docs/screenshots/wk2Day1RDS-EndPoints.png)
-- Security group inbound rule 5432 from my IP
-![inBoundRules](docs/screenshots/wk2Day1inBoundRules.png)
-- Terminal showing schema+CRUD queries succeeding
-![Schema+CRUD](docs/screenshots/wk2Day1psql-Schema-and-CRUD.png)
-## **Week 2 Prisma + RDS**
-**Prisma migrate / status**
-![migrate](docs/screenshots/Day3-prisma-migrate.png)
-**Prisma models (`schema.prisma`)**
-![models](docs/screenshots/Day3-Prisma-Models.png)
-**Prisma Studio (Meme table)**
-![studio](docs/screenshots/Day3-03-prisma-studio-memes.png)
-**POST 201 proof**
-![postman](docs/screenshots/Day3-POST-Prisma-201.png)
+
+### Day 1
+- `docs/screenshots/GET.png`  
+  ![GET](docs/screenshots/GET.png)
+- `docs/screenshots/POST.png`  
+  ![POST](docs/screenshots/POST.png)
+- `docs/screenshots/LocalHost.png`  
+  ![localHost](docs/screenshots/LocalHost.png)
+
+### Day 2
+- `docs/screenshots/Day2-memesOK.png` (GET /memes/1 → 200)  
+  ![memes/OK](docs/screenshots/Day2-memesOK.png)
+- `docs/screenshots/Day2-memesNotFound.png` (GET /memes/9999 → 404)  
+  ![memes/NotFound](docs/screenshots/Day2-memesNotFound.png)
+
+### Day 3
+- `docs/screenshots/Day3-logger.png`  
+  ![logger](docs/screenshots/Day3-logger.png)
+- `docs/screenshots/Day3-500errorTest.png`  
+  ![500-error](docs/screenshots/Day3-500errorTest.png)
+
+### Day 4 — Prisma relations (`GET /users/:id/memes`)
+- `docs/screenshots/Day4-users-4-memes-200.png` (GET /users/4/memes → 200)  
+  ![Day4-200](docs/screenshots/Day4-users-4-memes-200.png)
+- `docs/screenshots/Day4-users-99999-memes-404.png` (GET /users/99999/memes → 404)  
+  ![Day4-404](docs/screenshots/Day4-users-99999-memes-404.png)
+
+### Day 5 — CRUD with Prisma on RDS
+- `docs/screenshots/Day5-POST-memes-201.png` (POST /memes → 201)  
+  ![D5-POST](docs/screenshots/Day5-POST-memes-201.png)
+- `docs/screenshots/Day5-GET-memes-200.png` (GET /memes → 200)  
+  ![D5-GET-all](docs/screenshots/Day5-GET-memes-200.png)
+- `docs/screenshots/Day5-GET-memes-id-200.png` (GET /memes/{id} → 200)  
+  ![D5-GET-one](docs/screenshots/Day5-GET-memes-id-200.png)
+- `docs/screenshots/Day5-PUT-memes-id-200.png` (PUT /memes/{id} → 200)  
+  ![D5-PUT](docs/screenshots/Day5-PUT-memes-id-200.png)
+- `docs/screenshots/Day5-DELETE-memes-id-200.png` (DELETE /memes/{id} → 200)  
+  ![D5-DELETE](docs/screenshots/Day5-DELETE-memes-id-200.png)
+- `docs/screenshots/Day5-DELETE-memes-id-404.png` (DELETE same id again → 404)  
+  ![D5-ERROR](docs/screenshots/Day5-DELETE-memes-id-404.png)
+
+### Week 2 Day 1 — RDS setup (historical reference)
+- `docs/screenshots/wk2Day1RDS-EndPoints.png`  
+  ![Endpoint](docs/screenshots/wk2Day1RDS-EndPoints.png)
+- `docs/screenshots/wk2Day1inBoundRules.png`  
+  ![inBoundRules](docs/screenshots/wk2Day1inBoundRules.png)
+- `docs/screenshots/wk2Day1psql-Schema-and-CRUD.png`  
+  ![Schema+CRUD](docs/screenshots/wk2Day1psql-Schema-and-CRUD.png)
+
+### Week 2 — Prisma + RDS
+- `docs/screenshots/Day3-prisma-migrate.png`  
+  ![migrate](docs/screenshots/Day3-prisma-migrate.png)
+- `docs/screenshots/Day3-Prisma-Models.png`  
+  ![models](docs/screenshots/Day3-Prisma-Models.png)
+- `docs/screenshots/Day3-03-prisma-studio-memes.png`  
+  ![studio](docs/screenshots/Day3-03-prisma-studio-memes.png)
+- `docs/screenshots/Day3-POST-Prisma-201.png`  
+  ![postman](docs/screenshots/Day3-POST-Prisma-201.png)
+
 
 
 ## What’s inside
 
-ESM ("type": "module" in package.json)
+- ESM ("type": "module" in package.json)
 
-- Logging middleware: logs METHOD URL -> STATUS (ms) for every request
+- Logging middleware: logs METHOD URL → STATUS (ms)
 
 - Centralized error handler:
 
-  - bad JSON → 400 { "error": "Malformed JSON" }
-  - unexpected errors → 500 { "error": "Something went wrong!" }
+- bad JSON → 400 { "error": "Malformed JSON" }
+
+- unexpected → 500 { "error": "Something went wrong!" }
 
 - 404 JSON for unknown routes
 
-- MVC refactor (Day 5): routes ↔ controllers separation to prep for a DB later
+- MVC refactor (Day 5): routes ↔ controllers separation
+
+- Prisma + AWS RDS PostgreSQL
 
 ## Next Steps (Stretch)
 
